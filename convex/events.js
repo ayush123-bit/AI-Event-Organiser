@@ -27,23 +27,23 @@ export const createEvent = mutation({
   },
   handler: async (ctx, args) => {
     try {
-      const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    const hasPro = user.hasPro === true;
 
-      // SERVER-SIDE CHECK: Verify event limit for Free users
-      if (!hasPro && user.freeEventsCreated >= 1) {
-        throw new Error(
-          "Free event limit reached. Please upgrade to Pro to create more events."
-        );
-      }
+    // SERVER-SIDE CHECK: Verify event limit for Free users
+    if (!hasPro && user.freeEventsCreated >= 1) {
+      throw new Error(
+        "Free event limit reached. Please upgrade to Pro to create more events."
+      );
+    }
 
-      // SERVER-SIDE CHECK: Verify custom color usage
-      const defaultColor = "#1e3a8a";
-      if (!hasPro && args.themeColor && args.themeColor !== defaultColor) {
-        throw new Error(
-          "Custom theme colors are a Pro feature. Please upgrade to Pro."
-        );
-      }
-
+    // SERVER-SIDE CHECK: Verify custom color usage
+    const defaultColor = "#1e3a8a";
+    if (!hasPro && args.themeColor && args.themeColor !== defaultColor) {
+      throw new Error(
+        "Custom theme colors are a Pro feature. Please upgrade to Pro."
+      );
+    }
       // Force default color for Free users
       const themeColor = hasPro ? args.themeColor : defaultColor;
 
@@ -54,16 +54,33 @@ export const createEvent = mutation({
         .replace(/(^-|-$)/g, "");
 
       // Create event
-      const eventId = await ctx.db.insert("events", {
-        ...args,
-        themeColor, // Use validated color
-        slug: `${slug}-${Date.now()}`,
-        organizerId: user._id,
-        organizerName: user.name,
-        registrationCount: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
+  const eventId = await ctx.db.insert("events", {
+  title: args.title,
+  description: args.description,
+  category: args.category,
+  tags: args.tags,
+  startDate: args.startDate,
+  endDate: args.endDate,
+  timezone: args.timezone,
+  locationType: args.locationType,
+  venue: args.venue,
+  address: args.address,
+  city: args.city,
+  state: args.state,
+  country: args.country,
+  capacity: args.capacity,
+  ticketType: args.ticketType,
+  ticketPrice: args.ticketPrice,
+  coverImage: args.coverImage,
+  themeColor, // validated
+  slug: `${slug}-${Date.now()}`,
+  organizerId: user._id,
+  organizerName: user.name,
+  registrationCount: 0,
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+});
+
 
       // Update user's free event count
       await ctx.db.patch(user._id, {

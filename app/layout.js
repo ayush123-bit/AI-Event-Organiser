@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Footer from "@/components/footer";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { Toaster } from "sonner";
+import UserBootstrap from "@/components/user-bootstrap";
 
 export const metadata = {
   title: "Spott - Delightful Events Start Here",
@@ -24,6 +25,7 @@ export default function RootLayout({ children }) {
         >
           <ClerkProvider appearance={{ baseTheme: dark }}>
             <ConvexClientProvider>
+              <UserBootstrap>
               <Header />
 
               <main className="relative min-h-screen container mx-auto pt-40 md:pt-32">
@@ -38,6 +40,7 @@ export default function RootLayout({ children }) {
                 <Footer />
               </main>
               <Toaster position="top-center" richColors />
+              </UserBootstrap>
             </ConvexClientProvider>
           </ClerkProvider>
         </ThemeProvider>

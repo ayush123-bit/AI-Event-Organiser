@@ -51,3 +51,4 @@ export default function UpgradeModal({ isOpen, onClose, trigger = "limit" }) {
     </Dialog>
   );
 }
+
