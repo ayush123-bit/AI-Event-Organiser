@@ -7,11 +7,10 @@ export const getFeaturedEvents = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
+    // Remove the date filter to show all events including past ones for testing
     const events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
-      .filter((q) => q.gte(q.field("startDate"), now))
       .order("desc")
       .collect();
 
@@ -32,22 +31,20 @@ export const getEventsByLocation = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
-
+    // Get all events without date filtering
     let events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
-      .filter((q) => q.gte(q.field("startDate"), now))
       .collect();
 
     // Filter by city or state
     if (args.city) {
       events = events.filter(
-        (e) => e.city.toLowerCase() === args.city.toLowerCase()
+        (e) => e.city.toLowerCase() === args.city?.toLowerCase()
       );
     } else if (args.state) {
       events = events.filter(
-        (e) => e.state?.toLowerCase() === args.state.toLowerCase()
+        (e) => e.state?.toLowerCase() === args.state?.toLowerCase()
       );
     }
 
@@ -61,11 +58,10 @@ export const getPopularEvents = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
+    // Get all events
     const events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
-      .filter((q) => q.gte(q.field("startDate"), now))
       .collect();
 
     // Sort by registration count
@@ -84,11 +80,10 @@ export const getEventsByCategory = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const now = Date.now();
+    // Get all events in category without date filtering
     const events = await ctx.db
       .query("events")
       .withIndex("by_category", (q) => q.eq("category", args.category))
-      .filter((q) => q.gte(q.field("startDate"), now))
       .collect();
 
     return events.slice(0, args.limit ?? 12);
@@ -98,11 +93,10 @@ export const getEventsByCategory = query({
 // Get event counts by category
 export const getCategoryCounts = query({
   handler: async (ctx) => {
-    const now = Date.now();
+    // Get all events
     const events = await ctx.db
       .query("events")
       .withIndex("by_start_date")
-      .filter((q) => q.gte(q.field("startDate"), now))
       .collect();
 
     // Count events by category
@@ -112,5 +106,40 @@ export const getCategoryCounts = query({
     });
 
     return counts;
+  },
+});
+
+// Get all events (useful for testing)
+export const getAllEvents = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("events")
+      .order("desc")
+      .collect();
+
+    return events.slice(0, args.limit ?? 20);
+  },
+});
+
+// Get recent events (sorted by creation date)
+export const getRecentEvents = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("events")
+      .order("desc")
+      .collect();
+
+    // Sort by createdAt to show newest first
+    const recent = events
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, args.limit ?? 6);
+
+    return recent;
   },
 });
